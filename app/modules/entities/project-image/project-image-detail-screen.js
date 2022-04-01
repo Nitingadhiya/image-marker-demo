@@ -76,10 +76,16 @@ function ProjectImageDetailScreen(props) {
           accessibilityLabel={'ProjectImage Edit Button'}
           testID="projectImageEditButton"
         />
+         <RoundedButton
+          text="Edit"
+          onPress={() => navigation.navigate('ProjectImageEdit', { entityId })}
+          accessibilityLabel={'ProjectImage Edit Button'}
+          testID="projectImageEditButton"
+        />
         <RoundedButton
           text="Show Image and Add Markers"
           onPress={() => {
-            SimpleAlert();
+            navigation.navigate('ProjectImageMarker', { entityId });
           }}
           accessibilityLabel={'ProjectImage Add Marker Button'}
           testID="projectImageAddMarkerButton"

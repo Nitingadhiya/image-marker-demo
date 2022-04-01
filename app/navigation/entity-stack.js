@@ -12,6 +12,7 @@ import ProjectDetailScreen from '../modules/entities/project/project-detail-scre
 import ProjectEditScreen from '../modules/entities/project/project-edit-screen';
 import ProjectImageScreen from '../modules/entities/project-image/project-image-screen';
 import ProjectImageDetailScreen from '../modules/entities/project-image/project-image-detail-screen';
+import ProjectImageMarkerScreen from '../modules/entities/project-image/project-image-marker-screen';
 import ProjectImageEditScreen from '../modules/entities/project-image/project-image-edit-screen';
 import ImageMarkerScreen from '../modules/entities/image-marker/image-marker-screen';
 import ImageMarkerDetailScreen from '../modules/entities/image-marker/image-marker-detail-screen';
@@ -89,6 +90,15 @@ export const entityScreens = [
     component: ProjectImageEditScreen,
     options: {
       title: 'Edit ProjectImage',
+      headerLeft: () => <HeaderBackButton onPress={() => goBackOrIfParamsOrDefault('ProjectImageDetail', 'ProjectImage')} />,
+    },
+  },
+  {
+    name: 'ProjectImageMarker',
+    route: 'project-image/marker',
+    component: ProjectImageMarkerScreen,
+    options: {
+      title: 'Image & Marker',
       headerLeft: () => <HeaderBackButton onPress={() => goBackOrIfParamsOrDefault('ProjectImageDetail', 'ProjectImage')} />,
     },
   },
