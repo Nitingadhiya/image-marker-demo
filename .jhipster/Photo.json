@@ -1,0 +1,32 @@
+{
+  "name": "Photo",
+  "fields": [
+    {
+      "fieldName": "photoName",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "photoUploadDate",
+      "fieldType": "ZonedDateTime"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "imageMarker",
+      "otherEntityRelationshipName": "photo",
+      "relationshipName": "imageMarker"
+    }
+  ],
+  "entityTableName": "photo",
+  "dto": "mapstruct",
+  "pagination": "pagination",
+  "service": "serviceImpl",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": "*",
+  "angularJSSuffix": "",
+  "changelogDate": "20220315105604"
+}

@@ -1,0 +1,42 @@
+{
+  "name": "ProjectImage",
+  "fields": [
+    {
+      "fieldName": "projectImageName",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "projectImageUploadDate",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "projectImageAwsUrl",
+      "fieldType": "String"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "one-to-many",
+      "otherEntityName": "imageMarker",
+      "otherEntityRelationshipName": "projectImage",
+      "relationshipName": "imageMarker"
+    },
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "project",
+      "otherEntityRelationshipName": "projectImage",
+      "relationshipName": "project"
+    }
+  ],
+  "entityTableName": "project_image",
+  "dto": "mapstruct",
+  "pagination": "infinite-scroll",
+  "service": "serviceImpl",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": "*",
+  "angularJSSuffix": "",
+  "changelogDate": "20220315105602"
+}

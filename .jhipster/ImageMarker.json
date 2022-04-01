@@ -1,0 +1,42 @@
+{
+  "name": "ImageMarker",
+  "fields": [
+    {
+      "fieldName": "imageMarkerxPos",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "imageMarkeryPos",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "imageMarkerDescription",
+      "fieldType": "String"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "one-to-many",
+      "otherEntityName": "photo",
+      "otherEntityRelationshipName": "imageMarker",
+      "relationshipName": "photo"
+    },
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "projectImage",
+      "otherEntityRelationshipName": "imageMarker",
+      "relationshipName": "projectImage"
+    }
+  ],
+  "entityTableName": "image_marker",
+  "dto": "mapstruct",
+  "pagination": "pagination",
+  "service": "serviceImpl",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": "*",
+  "angularJSSuffix": "",
+  "changelogDate": "20220315105603"
+}

@@ -1,0 +1,63 @@
+{
+  "generator-jhipster": {
+    "blueprints": [
+      {
+        "name": "generator-jhipster-react-native",
+        "version": "4.2.5"
+      }
+    ],
+    "otherModules": [
+      {
+        "name": "generator-jhipster-react-native",
+        "version": "4.2.5"
+      }
+    ],
+    "skipClient": false,
+    "reactNative": {
+      "reactNativeAppName": "siteapp",
+      "detox": true,
+      "backend": "/Users/seamusmccarthy/Documents/GitHub/seamusmcPrivateRepo/siteapp/backend"
+    },
+    "applicationType": "monolith",
+    "authenticationType": "jwt",
+    "baseName": "siteapp",
+    "buildTool": "maven",
+    "cacheProvider": "ehcache",
+    "clientFramework": "no",
+    "clientPackageManager": "npm",
+    "clientTheme": "none",
+    "clientThemeVariant": "",
+    "creationTimestamp": 1647280678409,
+    "databaseType": "sql",
+    "devDatabaseType": "mysql",
+    "devServerPort": 9060,
+    "dtoSuffix": "DTO",
+    "enableGradleEnterprise": false,
+    "enableHibernateCache": true,
+    "enableSwaggerCodegen": false,
+    "enableTranslation": false,
+    "entitySuffix": "",
+    "jhiPrefix": "jhi",
+    "jhipsterVersion": "7.6.0",
+    "jwtSecretKey": "NGUyNTVmNTUxNjAyOTZiNzhlNjFkZTk2NWQzZWFlMDhhMDM5NTMyOGY5NDE4Njg0OTgwNjFlMmNjYTIxYjBjMGU4NGM1YmIzYzNmZWY4NDQ3YzUwN2UwZTI4MTM3YWYyZTNlZDJkNzhhYzliZDUyOTUxZThiNTU1Yzg1ZmFhZTg=",
+    "languages": ["en", "fr"],
+    "messageBroker": false,
+    "nativeLanguage": "en",
+    "packageName": "com.eiresw.siteapp",
+    "pages": [],
+    "prodDatabaseType": "mysql",
+    "reactive": false,
+    "searchEngine": false,
+    "serverPort": "8080",
+    "serverSideOptions": [],
+    "serviceDiscoveryType": "no",
+    "skipCheckLengthOfIdentifier": false,
+    "skipFakeData": false,
+    "skipUserManagement": false,
+    "testFrameworks": [],
+    "websocket": false,
+    "withAdminUi": true,
+    "entities": ["Project", "ProjectImage", "ImageMarker", "Photo"],
+    "lastLiquibaseTimestamp": 1647341764000
+  }
+}
