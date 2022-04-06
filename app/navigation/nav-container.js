@@ -172,7 +172,8 @@ function NavContainer(props) {
             <Drawer.Navigator
               drawerContent={(p) => <DrawerContent {...p} />}
               initialRouteName={drawerScreens[0].name}
-              drawerType={dimensions.width >= 768 ? 'permanent' : 'front'}
+              drawerType={dimensions.width >= 768 ? 'front' : 'front'} 
+              //permanent
               screenOptions={{ headerShown: true, headerLeft: DrawerButton }}>
               {getScreens(props)}
             </Drawer.Navigator>

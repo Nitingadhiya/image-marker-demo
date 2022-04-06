@@ -85,6 +85,7 @@ function ProjectImageDetailScreen(props) {
         <RoundedButton
           text="Show Image and Add Markers"
           onPress={() => {
+            navigation.closeDrawer();
             navigation.navigate('ProjectImageMarker', { entityId });
           }}
           accessibilityLabel={'ProjectImage Add Marker Button'}
