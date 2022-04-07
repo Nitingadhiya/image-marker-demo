@@ -7,7 +7,6 @@ function* getImageMarker(api, action) {
   // make the call to the api
   const apiCall = call(api.getImageMarker, imageMarkerId);
   const response = yield call(callApi, apiCall);
-
   // success?
   if (response.ok) {
     yield put(ImageMarkerActions.imageMarkerSuccess(response.data));
@@ -21,7 +20,6 @@ function* getAllImageMarkers(api, action) {
   // make the call to the api
   const apiCall = call(api.getAllImageMarkers, options);
   const response = yield call(callApi, apiCall);
-
   // success?
   if (response.ok) {
     yield put(ImageMarkerActions.imageMarkerAllSuccess(response.data, response.headers));
@@ -36,7 +34,6 @@ function* updateImageMarker(api, action) {
   const idIsNotNull = !(imageMarker.id === null || imageMarker.id === undefined);
   const apiCall = call(idIsNotNull ? api.updateImageMarker : api.createImageMarker, imageMarker);
   const response = yield call(callApi, apiCall);
-
   // success?
   if (response.ok) {
     yield put(ImageMarkerActions.imageMarkerUpdateSuccess(response.data));

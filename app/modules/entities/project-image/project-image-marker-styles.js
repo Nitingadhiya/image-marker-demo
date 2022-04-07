@@ -35,10 +35,10 @@ export default StyleSheet.create({
   },
   modalView: {
     // margin: 20,
-    height: Dimensions.get('window').height,
+    // height: Dimensions.get('window').height,
     backgroundColor: "#1C1C1E",
     // borderRadius: 20,
-    paddingTop: 35,
+    paddingTop: 20,
     paddingHorizontal: 20,
     alignItems: "center",
     shadowColor: "#000",
@@ -49,7 +49,7 @@ export default StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    width: Dimensions.get('window').width  - 60
+    width: Dimensions.get('window').width
   },
   button: {
     borderRadius: 10,
@@ -66,7 +66,8 @@ export default StyleSheet.create({
   textStyle: {
     color: "white",
     fontWeight: "bold",
-    textAlign: "center"
+    textAlign: "center",
+    
   },
   modalText: {
     marginBottom: 15,
@@ -75,14 +76,14 @@ export default StyleSheet.create({
 
   /* Text Input Style */
   input: {
-    height: 110,
+    height: 140,
     width: '100%',
     margin: 12,
     // borderWidth: 1,
     borderRadius: 10,
     padding: 10,
-    fontSize: 18,
-    color: '#4B4C4E',
+    fontSize: 20,
+    color: '#666',
     backgroundColor: '#29292B'
   },
 
@@ -90,7 +91,12 @@ export default StyleSheet.create({
   addMarkerButton: { zIndex: 10001, height: 50, width: 100, backgroundColor: '#ffcc00', position: 'absolute', top: 50, right: 10, borderRadius: 10, justifyContent: 'center', alignItems: 'center'},
   addMarkerText: { color: '#000', fontSize: 16},
   removeMarkerButton: { zIndex: 10001, height: 50, width: 100, backgroundColor: '#ffcc00', position: 'absolute', top: 50, right: 130, borderRadius: 10, justifyContent: 'center', alignItems: 'center'},
-  bottomSections: {flex: 1, alignItems: 'flex-end', flexDirection: 'row', alignSelf: 'flex-end'},
+  bottomSections: {
+    alignItems: 'flex-end', 
+    flexDirection: 'row', 
+    alignSelf: 'flex-end',
+    height: 60
+  },
   moveMarker: {
     padding: 10,
   }

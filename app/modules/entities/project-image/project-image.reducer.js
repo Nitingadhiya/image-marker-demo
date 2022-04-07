@@ -21,6 +21,10 @@ const { Types, Creators } = createActions({
   projectImageUpdateFailure: ['error'],
   projectImageDeleteFailure: ['error'],
 
+  markerSaveRequest: [],
+  markerSaveSuccess: [],
+  markerSaveFailure: ['error'],
+
   projectImageReset: [],
 });
 

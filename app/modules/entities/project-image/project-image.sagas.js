@@ -8,6 +8,7 @@ function* getProjectImage(api, action) {
   // make the call to the api
   const apiCall = call(api.getProjectImage, projectImageId);
   const response = yield call(callApi, apiCall);
+  console.log(response);
 
   // success?
   if (response.ok) {

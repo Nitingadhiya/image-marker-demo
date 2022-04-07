@@ -22,6 +22,7 @@ const SimpleAlert = () => {
 // @ts-ignore
 function ProjectImageDetailScreen(props) {
   const { route, getProjectImage, navigation, projectImage, fetching, error } = props;
+
   const [deleteModalVisible, setDeleteModalVisible] = React.useState(false);
   // prevents display of stale reducer data
   const entityId = projectImage?.id ?? null;
@@ -86,7 +87,7 @@ function ProjectImageDetailScreen(props) {
           text="Show Image and Add Markers"
           onPress={() => {
             navigation.closeDrawer();
-            navigation.navigate('ProjectImageMarker', { entityId });
+            navigation.navigate('ProjectImageMarker', { projectImage });
           }}
           accessibilityLabel={'ProjectImage Add Marker Button'}
           testID="projectImageAddMarkerButton"
