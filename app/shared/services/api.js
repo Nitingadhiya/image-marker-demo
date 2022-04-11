@@ -74,6 +74,7 @@ const create = (baseURL = AppConfig.apiUrl) => {
 
   const getImageMarker = (imageMarkerId) => api.get('api/image-markers/' + imageMarkerId);
   const getAllImageMarkers = (options) => api.get('api/image-markers', options);
+  const getProjectImageMarkers = (projectId) => api.get('api/image-markers/getAllImageMarkersByProjectImageId/'+ projectId);
   const createImageMarker = (imageMarker) => api.post('api/image-markers', imageMarker);
   const updateImageMarker = (imageMarker) => api.put(`api/image-markers/${imageMarker.id}`, imageMarker);
   const deleteImageMarker = (imageMarkerId) => api.delete('api/image-markers/' + imageMarkerId);
@@ -121,6 +122,7 @@ const create = (baseURL = AppConfig.apiUrl) => {
     updateImageMarker,
     getAllImageMarkers,
     getImageMarker,
+    getProjectImageMarkers,
     deleteImageMarker,
 
     createPhoto,

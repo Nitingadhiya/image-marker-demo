@@ -18,7 +18,7 @@ let tempMarker;
 
 // @ts-ignore
 function ProjectImageMarkerScreen(props) {
-  const {updateImageMarker} = props;
+  const {updateImageMarker, getProjectImageMarkers, imageProjectMarkerList} = props;
   const {width, height} = Dimensions.get('window');
   const projectImage = props.route.params?.projectImage ?? null;
 
@@ -27,14 +27,32 @@ function ProjectImageMarkerScreen(props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [description, onChangeText] = useState("");
 
+  //getProjectImageMarkers
+
+  console.log('props.imageProjectMarkerList', props.imageProjectMarkerList);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      selectedIndex = null;
+      console.debug('ImageMarker entity changed and the list screen is now in focus, refresh');
+      setPoints(props.imageProjectMarkerList);
+      /* eslint-disable-next-line react-hooks/exhaustive-deps */
+    }, [props.imageProjectMarkerList]),
+  );
+
+  React.useEffect(() => {
+      getProjectImageMarkers(projectImage.project.id);
+  
+  }, [getProjectImageMarkers]);
+
   const [addedPoints, setPoints] = useState([]);
   const handleClick = (e) => {
     console.log('clicked', e);
       if(addMarker) {
         tempMarker = true;
         let points = [...addedPoints, {
-          'x':e.locationX,
-          'y':e.locationY,
+          'imageMarkerxPos':e.locationX,
+          'imageMarkeryPos':e.locationY,
           'label': addedPoints.length + 1
           }];
           setPoints(points);
@@ -44,10 +62,10 @@ function ProjectImageMarkerScreen(props) {
   };
 
   const showMarker = () => addedPoints.map( (point, index) => {
-    const xyPosition = { top: point.y, left: point.x };
+    const xyPosition = { top: point.imageMarkeryPos, left: point.imageMarkerxPos };
     return (
-      <TouchableOpacity key={point.x} style={[styles.markerView, xyPosition]} onPress={()=> openBottomSheetPanel(index)}>
-        <Text style={{fontSize:10,color: '#fff'}} key={point.x}>{point.label}</Text>
+      <TouchableOpacity key={`key_${index}`} style={[styles.markerView, xyPosition]} onPress={()=> openBottomSheetPanel(index)}>
+        <Text style={{fontSize:10,color: '#fff'}} key={point.imageMarkerxPos}>{point.label ?? index + 1}</Text>
       </TouchableOpacity>
     );
   });
@@ -60,19 +78,19 @@ function ProjectImageMarkerScreen(props) {
   const backdropPress = () => {
     if(tempMarker) {
       deleteMarker();
+    } else {
+      selectedIndex = null;
     }
     setModalVisible(false);
   }
 
   const formValueToEntity = () => {
-    console.log("DATA");
-    console.log(selectedIndex);
     const length = addedPoints.length - 1;
     console.log(length);
     const entity = {
       "id": null,
-      "imageMarkerxPos": addedPoints[length].x, // 394.0078125,
-      "imageMarkeryPos": addedPoints[length].y, //281.46875,
+      "imageMarkerxPos": addedPoints[length].imageMarkerxPos, // 394.0078125,
+      "imageMarkeryPos": addedPoints[length].imageMarkeryPos, //281.46875,
       "imageMarkerDescription": description,
       "projectImage": {
         "id": projectImage.project.id,
@@ -82,21 +100,15 @@ function ProjectImageMarkerScreen(props) {
         "project": projectImage.project
       },
 
-      // id: value.id ?? null,
-      // imageMarkerxPos: value.imageMarkerxPos ?? null,
-      // imageMarkeryPos: value.imageMarkeryPos ?? null,
-      // imageMarkerDescription: value.imageMarkerDescription ?? null,
     };
-    // entity.projectImage = value.projectImage ? { id: value.projectImage } : null;
     return entity;
   };
 
   const addDescription = () => {
-    console.log("*************");
     console.log(formValueToEntity());
-    console.log('-------------')
     updateImageMarker(formValueToEntity())
     setModalVisible(!modalVisible);
+    selectedIndex = null;
   }
 
   const showBottomSheet = () => {
@@ -108,23 +120,22 @@ function ProjectImageMarkerScreen(props) {
       backdropOpacity={0.3}
       isVisible={modalVisible}
       onBackdropPress={() => backdropPress()}
-      onSwipeComplete={() => setModalVisible(false)}
-      swipeDirection="right"
+      onSwipeComplete={() => backdropPress()}
+      swipeDirection="down"
       style={{marginRight: 0, marginBottom: 0, marginTop: 0}}
-      onRequestClose={() => {
-        setModalVisible(!modalVisible);
-      }}
+      onRequestClose={() => backdropPress()}
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
+            {selectedIndex != null ?
             <TextInput
               style={styles.input}
               onChangeText={onChangeText}
-              value={description}
+              value={addedPoints[selectedIndex].imageMarkerDescription}
               multiline={true}
               placeholderTextColor={'#666'}
               placeholder="Description"
-            />
+            /> : null}
             <RoundedButton
               text="Update"
               onPress={() => addDescription()}
@@ -149,13 +160,12 @@ function ProjectImageMarkerScreen(props) {
   };
 
   const deleteMarker = () => {
-    console.log('selectedIndex', selectedIndex);
-    console.log("addedPoints", addedPoints);
-    let addedPoints1 = addedPoints.splice(selectedIndex, 1);
-    console.log('addedPoints', addedPoints);
-    setAddMarker(addedPoints1);
+    // let addedPoints1 = addedPoints.splice(selectedIndex, 1);
+    // setAddMarker(addedPoints1);
     setModalVisible(false);
+    selectedIndex = null;
   }
+
 
   return (
     <View style={styles.mainView}>
@@ -190,12 +200,17 @@ function ProjectImageMarkerScreen(props) {
   );
 }
 
+
 const mapStateToProps = (state) => {
-  return {};
+  return {
+    imageProjectMarkerList: state.imageMarkers.imageProjectMarkerList,
+    fetching: state.imageMarkers.fetchingAll
+  };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    getProjectImageMarkers: (id) => dispatch(ImageMarkerActions.imageMarkerByProjectRequest(id)),
     updateImageMarker: (imageMarker) => dispatch(ImageMarkerActions.imageMarkerUpdateRequest(imageMarker)),
   };
 };

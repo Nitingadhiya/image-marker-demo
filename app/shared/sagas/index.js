@@ -63,6 +63,7 @@ export default function* root() {
 
     takeLatest(ImageMarkerTypes.IMAGE_MARKER_REQUEST, ImageMarkerSagas.getImageMarker, api),
     takeLatest(ImageMarkerTypes.IMAGE_MARKER_ALL_REQUEST, ImageMarkerSagas.getAllImageMarkers, api),
+    takeLatest(ImageMarkerTypes.IMAGE_MARKER_BY_PROJECT_REQUEST, ImageMarkerSagas.getProjectImageMarkers, api),
     takeLatest(ImageMarkerTypes.IMAGE_MARKER_UPDATE_REQUEST, ImageMarkerSagas.updateImageMarker, api),
     takeLatest(ImageMarkerTypes.IMAGE_MARKER_DELETE_REQUEST, ImageMarkerSagas.deleteImageMarker, api),
 

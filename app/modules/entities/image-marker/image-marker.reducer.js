@@ -8,16 +8,19 @@ import { parseHeaderForLinks } from '../../../shared/util/url-utils';
 const { Types, Creators } = createActions({
   imageMarkerRequest: ['imageMarkerId'],
   imageMarkerAllRequest: ['options'],
+  imageMarkerByProjectRequest: ['projectId'],
   imageMarkerUpdateRequest: ['imageMarker'],
   imageMarkerDeleteRequest: ['imageMarkerId'],
 
   imageMarkerSuccess: ['imageMarker'],
   imageMarkerAllSuccess: ['imageMarkerList', 'headers'],
+  imageMarkerByProjectSuccess: ['imageProjectMarkerList','headers'],
   imageMarkerUpdateSuccess: ['imageMarker'],
   imageMarkerDeleteSuccess: [],
 
   imageMarkerFailure: ['error'],
   imageMarkerAllFailure: ['error'],
+  imageMarkerByProjectFailure: ['error'],
   imageMarkerUpdateFailure: ['error'],
   imageMarkerDeleteFailure: ['error'],
 
@@ -37,6 +40,7 @@ export const INITIAL_STATE = Immutable({
   updateSuccess: false,
   imageMarker: { id: undefined },
   imageMarkerList: [],
+  imageProjectMarkerList:[],
   errorOne: null,
   errorAll: null,
   errorUpdating: null,
@@ -57,6 +61,12 @@ export const request = (state) =>
 
 // request the data from an api
 export const allRequest = (state) =>
+  state.merge({
+    fetchingAll: true,
+    errorAll: false,
+  });
+
+export const markerByProjectRequest = (state) =>
   state.merge({
     fetchingAll: true,
     errorAll: false,
@@ -95,6 +105,18 @@ export const allSuccess = (state, action) => {
     imageMarkerList: loadMoreDataWhenScrolled(state.imageMarkerList, imageMarkerList, links),
   });
 };
+
+// successful api lookup for all entities
+export const projectMarkerSuccess = (state, action) => {
+  const { imageProjectMarkerList } = action;
+  return state.merge({
+    fetchingAll: false,
+    errorAll: null,
+    imageProjectMarkerList,
+  });
+};
+
+
 // successful api update
 export const updateSuccess = (state, action) => {
   const { imageMarker } = action;
@@ -132,6 +154,17 @@ export const allFailure = (state, action) => {
     imageMarkerList: [],
   });
 };
+
+// Something went wrong fetching all entities.
+export const projectMarkerFailure = (state, action) => {
+  const { error } = action;
+  return state.merge({
+    fetchingAll: false,
+    errorAll: error,
+    imageProjectMarkerList: [],
+  });
+};
+
 // Something went wrong updating.
 export const updateFailure = (state, action) => {
   const { error } = action;
@@ -159,16 +192,19 @@ export const reset = (state) => INITIAL_STATE;
 export const reducer = createReducer(INITIAL_STATE, {
   [Types.IMAGE_MARKER_REQUEST]: request,
   [Types.IMAGE_MARKER_ALL_REQUEST]: allRequest,
+  [Types.IMAGE_MARKER_BY_PROJECT_REQUEST]: markerByProjectRequest,
   [Types.IMAGE_MARKER_UPDATE_REQUEST]: updateRequest,
   [Types.IMAGE_MARKER_DELETE_REQUEST]: deleteRequest,
 
   [Types.IMAGE_MARKER_SUCCESS]: success,
   [Types.IMAGE_MARKER_ALL_SUCCESS]: allSuccess,
+  [Types.IMAGE_MARKER_BY_PROJECT_SUCCESS]: projectMarkerSuccess,
   [Types.IMAGE_MARKER_UPDATE_SUCCESS]: updateSuccess,
   [Types.IMAGE_MARKER_DELETE_SUCCESS]: deleteSuccess,
 
   [Types.IMAGE_MARKER_FAILURE]: failure,
   [Types.IMAGE_MARKER_ALL_FAILURE]: allFailure,
+  [Types.IMAGE_MARKER_BY_PROJECT_FAILURE]: projectMarkerFailure,
   [Types.IMAGE_MARKER_UPDATE_FAILURE]: updateFailure,
   [Types.IMAGE_MARKER_DELETE_FAILURE]: deleteFailure,
   [Types.IMAGE_MARKER_RESET]: reset,
