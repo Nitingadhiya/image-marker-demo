@@ -1,14 +1,12 @@
 import React, {useState} from 'react';
-import { ActivityIndicator, Image, Text, View, Alert, StyleSheet, Dimensions, TouchableOpacity, TextInput } from 'react-native';
+import { ActivityIndicator, Image, Text, View, Dimensions, TouchableOpacity, TextInput } from 'react-native';
 import { connect } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import ImageMarkerActions from '../image-marker/image-marker.reducer';
 
-import ProjectImageActions from './project-image.reducer';
 import RoundedButton from '../../../shared/components/rounded-button/rounded-button';
-import ProjectImageDeleteModal from './project-image-delete-modal';
 import ImageZoom from 'react-native-image-pan-zoom';
-import { MaterialIcons, AntDesign } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import Modal from "react-native-modal";
 import styles from './project-image-marker-styles';
 
@@ -16,9 +14,12 @@ import styles from './project-image-marker-styles';
 let selectedIndex;
 let tempMarker;
 
+let imageHeight;
+let imageWidth;
+
 // @ts-ignore
 function ProjectImageMarkerScreen(props) {
-  const {updateImageMarker, getProjectImageMarkers, imageProjectMarkerList} = props;
+  const {updateImageMarker, getProjectImageMarkers} = props;
   const {width, height} = Dimensions.get('window');
   const projectImage = props.route.params?.projectImage ?? null;
 
@@ -27,14 +28,12 @@ function ProjectImageMarkerScreen(props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [description, onChangeText] = useState("");
 
-  //getProjectImageMarkers
-
-  console.log('props.imageProjectMarkerList', props.imageProjectMarkerList);
-
   useFocusEffect(
     React.useCallback(() => {
+      getProjectImageSize();
       selectedIndex = null;
       console.debug('ImageMarker entity changed and the list screen is now in focus, refresh');
+      // console.log(props.imageProjectMarkerList);
       setPoints(props.imageProjectMarkerList);
       /* eslint-disable-next-line react-hooks/exhaustive-deps */
     }, [props.imageProjectMarkerList]),
@@ -44,6 +43,20 @@ function ProjectImageMarkerScreen(props) {
       getProjectImageMarkers(projectImage.project.id);
   
   }, [getProjectImageMarkers]);
+
+  const getProjectImageSize = () => {
+    Image.getSize(projectImage.projectImageAwsUrl, (width, height) => {
+      if(width > height) {
+        let ratio = width / Dimensions.get('window').width;
+        imageWidth = width;
+        imageHeight = height /ratio;
+      } else {
+        let ratio = height / Dimensions.get('window').height;
+        imageWidth = width / ratio;
+        imageHeight = height;
+      }
+    });
+  }
 
   const [addedPoints, setPoints] = useState([]);
   const handleClick = (e) => {
@@ -63,8 +76,10 @@ function ProjectImageMarkerScreen(props) {
 
   const showMarker = () => addedPoints.map( (point, index) => {
     const xyPosition = { top: point.imageMarkeryPos, left: point.imageMarkerxPos };
+    const renderSelectedMarkerStyle = () => index == selectedIndex ? {borderWidth: 3, borderColor: '#2196F3'} : {};
+    
     return (
-      <TouchableOpacity key={`key_${index}`} style={[styles.markerView, xyPosition]} onPress={()=> openBottomSheetPanel(index)}>
+      <TouchableOpacity key={`key_${index}`} style={[styles.markerView, renderSelectedMarkerStyle(), xyPosition]} onPress={()=> openBottomSheetPanel(index)}>
         <Text style={{fontSize:10,color: '#fff'}} key={point.imageMarkerxPos}>{point.label ?? index + 1}</Text>
       </TouchableOpacity>
     );
@@ -86,7 +101,6 @@ function ProjectImageMarkerScreen(props) {
 
   const formValueToEntity = () => {
     const length = addedPoints.length - 1;
-    console.log(length);
     const entity = {
       "id": null,
       "imageMarkerxPos": addedPoints[length].imageMarkerxPos, // 394.0078125,
@@ -105,7 +119,6 @@ function ProjectImageMarkerScreen(props) {
   };
 
   const addDescription = () => {
-    console.log(formValueToEntity());
     updateImageMarker(formValueToEntity())
     setModalVisible(!modalVisible);
     selectedIndex = null;
@@ -160,10 +173,15 @@ function ProjectImageMarkerScreen(props) {
   };
 
   const deleteMarker = () => {
-    // let addedPoints1 = addedPoints.splice(selectedIndex, 1);
-    // setAddMarker(addedPoints1);
-    setModalVisible(false);
-    selectedIndex = null;
+    console.log(addedPoints.length);
+    console.log(selectedIndex,'selectedIndex')
+
+    if(selectedIndex >= 0) {
+      let addedPoints1 = addedPoints.splice(selectedIndex, 1);
+      // setAddMarker(addedPoints1);
+      setModalVisible(false);
+      selectedIndex = null;
+    }
   }
 
 
@@ -174,20 +192,20 @@ function ProjectImageMarkerScreen(props) {
 
       <View style={styles.imagePanView}>
         <ImageZoom
-          cropWidth={width}
-          cropHeight={height}
+          cropWidth={imageWidth}
+          cropHeight={imageHeight}
           panToMove={true}
           minScale={1}
           maxScale={4}
-          imageHeight={width}
+          imageHeight={imageHeight}
           onMove={(e) => setScale(e.scale)}
-          imageWidth={width}
+          imageWidth={imageWidth}
           style={{ marginTop: 0 }}
           onClick={handleClick}>
             {showMarker()}
             {/* https://img.parts-catalogs.com/bmw_2020_01/data/JPG/209412.png */}
           <Image
-            style={{ width: width, height: width }}
+            style={{ width: imageWidth, height: imageHeight }}
             source={{
               uri: projectImage.projectImageAwsUrl,
             }}

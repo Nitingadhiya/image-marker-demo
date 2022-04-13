@@ -29,12 +29,12 @@ function* getAllImageMarkers(api, action) {
 }
 
 function* getProjectImageMarkers(api, action) {
-  console.log("******************", action);
+  // console.log("******************", action);
   const { projectId } = action;
   // make the call to the api
   const apiCall = call(api.getProjectImageMarkers, projectId);
   const response = yield call(callApi, apiCall);
-  console.log('response Nitin', response);
+  // console.log('response Nitin', response);
   // success?
   if (response.ok) {
     yield put(ImageMarkerActions.imageMarkerByProjectSuccess(response.data, response.headers));
