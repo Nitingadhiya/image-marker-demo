@@ -33,7 +33,8 @@ function LoginScreen(props) {
   // submit handler
   const onSubmit = (data) => {
     setError('');
-    attemptLogin(data.login, data.password);
+    // attemptLogin(data.login, data.password);    
+    attemptLogin('admin','admin');
   };
 
   // create refs for handling onSubmit functionality
@@ -49,7 +50,7 @@ function LoginScreen(props) {
   return (
     <KeyboardAwareScrollView contentContainerStyle={styles.container} testID="loginScreen" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       {!!error && <Text style={styles.errorText}>{error}</Text>}
-      <Form initialValues={{ login: '', password: '' }} validationSchema={validationSchema} onSubmit={onSubmit} ref={formRef}>
+      <Form initialValues={{ login: 'admin', password: 'admin' }} validationSchema={validationSchema} onSubmit={onSubmit} ref={formRef}>
         <FormField
           name="login"
           testID="loginScreenUsername"

@@ -83,5 +83,12 @@ export default function* root() {
 
     takeLatest(AccountTypes.ACCOUNT_REQUEST, getAccount, api),
     takeLatest(AccountTypes.ACCOUNT_UPDATE_REQUEST, updateAccount, api),
+
+
+    takeLatest(ImageMarkerTypes.IMAGE_MARKER_OPT, ImageMarkerSagas.updateProjectImageMarkers),
+    takeLatest(ImageMarkerTypes.IMAGE_MARKER_INFO_POPUP, ImageMarkerSagas.openMarkerInfoModal), // By JY
+
+
+
   ]);
 }

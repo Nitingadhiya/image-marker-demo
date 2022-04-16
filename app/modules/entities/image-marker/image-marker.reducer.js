@@ -1,7 +1,5 @@
 import { createReducer, createActions } from 'reduxsauce';
 import Immutable from 'seamless-immutable';
-import { loadMoreDataWhenScrolled } from '../../../shared/util/pagination-utils';
-import { parseHeaderForLinks } from '../../../shared/util/url-utils';
 
 /* ------------- Types and Action Creators ------------- */
 
@@ -14,9 +12,9 @@ const { Types, Creators } = createActions({
 
   imageMarkerSuccess: ['imageMarker'],
   imageMarkerAllSuccess: ['imageMarkerList', 'headers'],
-  imageMarkerByProjectSuccess: ['imageProjectMarkerList','headers'],
+  imageMarkerByProjectSuccess: ['imageProjectMarkerList'],
   imageMarkerUpdateSuccess: ['imageMarker'],
-  imageMarkerDeleteSuccess: [],
+  imageMarkerDeleteSuccess: ['deleteMarker'],
 
   imageMarkerFailure: ['error'],
   imageMarkerAllFailure: ['error'],
@@ -25,6 +23,10 @@ const { Types, Creators } = createActions({
   imageMarkerDeleteFailure: ['error'],
 
   imageMarkerReset: [],
+
+  //By JY
+  imageMarkerOPT: ['imageProjectMarkerList'],
+  imageMarkerInfoPopup: ['markerInfoModalvisible'],  
 });
 
 export const ImageMarkerTypes = Types;
@@ -33,6 +35,7 @@ export default Creators;
 /* ------------- Initial State ------------- */
 
 export const INITIAL_STATE = Immutable({
+  markerInfoModalvisible: false,
   fetchingOne: false,
   fetchingAll: false,
   updating: false,
@@ -95,14 +98,11 @@ export const success = (state, action) => {
 };
 // successful api lookup for all entities
 export const allSuccess = (state, action) => {
-  const { imageMarkerList, headers } = action;
-  const links = parseHeaderForLinks(headers.link);
+  const { imageMarkerList } = action;
   return state.merge({
     fetchingAll: false,
     errorAll: null,
-    links,
-    totalItems: parseInt(headers['x-total-count'], 10),
-    imageMarkerList: loadMoreDataWhenScrolled(state.imageMarkerList, imageMarkerList, links),
+    imageMarkerList: imageMarkerList,
   });
 };
 
@@ -113,6 +113,15 @@ export const projectMarkerSuccess = (state, action) => {
     fetchingAll: false,
     errorAll: null,
     imageProjectMarkerList,
+  });
+};
+
+// open Modal for TextBox By JY
+export const openMarkerTextBoxPopup = (state, action) => {
+  const { markerInfoModalvisible } = action;
+  console.log("Visible NN", markerInfoModalvisible);
+  return state.merge({
+    markerInfoModalvisible: markerInfoModalvisible,
   });
 };
 
@@ -208,4 +217,8 @@ export const reducer = createReducer(INITIAL_STATE, {
   [Types.IMAGE_MARKER_UPDATE_FAILURE]: updateFailure,
   [Types.IMAGE_MARKER_DELETE_FAILURE]: deleteFailure,
   [Types.IMAGE_MARKER_RESET]: reset,
+
+  [Types.IMAGE_MARKER_OPT]: projectMarkerSuccess,
+  [Types.IMAGE_MARKER_INFO_POPUP]: openMarkerTextBoxPopup, // BY JY
+
 });
