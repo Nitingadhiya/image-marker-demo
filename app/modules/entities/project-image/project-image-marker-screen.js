@@ -1,5 +1,5 @@
-import React, {useState, useRef} from 'react';
-import { ActivityIndicator, Image, Text, View, Dimensions, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, {useState} from 'react';
+import { Image, Text, View, Dimensions, TouchableOpacity, TextInput } from 'react-native';
 import { connect } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import ImageMarkerActions from '../image-marker/image-marker.reducer';
@@ -10,40 +10,27 @@ import ImageZoom from 'react-native-image-pan-zoom';
 import { MaterialIcons } from '@expo/vector-icons';
 import Modal from "react-native-modal";
 import styles from './project-image-marker-styles';
-
-import { useDidUpdateEffect } from '../../../shared/util/use-did-update-effect';
-import { put } from 'redux-saga/effects';
 import Immutable from 'seamless-immutable'
-
-
-let selectedIndex;
-let tempMarker;
-let backPress = false;
 
 let imageHeight;
 let imageWidth;
+let selectedIndex;
+let markerPoints = [];
+let decription = '';
 
-let tempPoints = [];
-let txtInpValueChange = false;
 // @ts-ignore
 function ProjectImageMarkerScreen(props) {
-  const {updateImageMarker, getProjectImageMarkers,
-    imageProjectMarkerList,imageMarker, 
-    imageMarkerDeleteSuccess, fetching,
+  const {
+    updateImageMarker, 
+    getProjectImageMarkers,
+    imageProjectMarkerList,
+    imageMarker, 
     OPTImageMarker,
-    markerPopupVisible,
-    visible
+    markerPopupVisible, // 
+    isVisible // isVisible
   } = props;
-  const {width, height} = Dimensions.get('window');
   const projectImage = props.route.params?.projectImage ?? null;
-
   const [scale, setScale] = useState('');
-  const [addMarker, setAddMarker] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [description, onChangeText] = useState("");
-
-const textInputRef = React.createRef();
-
   useFocusEffect(
     React.useCallback(() => {
       getProjectImageSize();
@@ -51,11 +38,8 @@ const textInputRef = React.createRef();
     },[]));
 
     React.useEffect(() => {
-      console.log('props', props);
       console.debug('ImageMarker entity changed and the list screen is now in focus, refresh');
-      // console.log(props.imageProjectMarkerList);
-      // setPoints(imageProjectMarkerList);
-      tempPoints = imageProjectMarkerList;
+      markerPoints = imageProjectMarkerList;
       /* eslint-disable-next-line react-hooks/exhaustive-deps */
     }, [imageProjectMarkerList, imageMarker]
   );
@@ -64,13 +48,7 @@ const textInputRef = React.createRef();
       getProjectImageMarkers(projectImage.project.id);
   }, [getProjectImageMarkers]);
 
-  // React.useEffect(() => {
-  //  if (!fetching) {
-  //   getProjectImageMarkers(projectImage.project.id);
-  //   }
-  // }, [projectImage]);
-  
-
+  // Get Actual project Image Size
   const getProjectImageSize = () => {
     Image.getSize(projectImage.projectImageAwsUrl, (width, height) => {
       if(width > height) {
@@ -85,26 +63,18 @@ const textInputRef = React.createRef();
     });
   }
 
-  // const [addedPoints, setPoints] = useState([]);
+  //Handle Click Add / Update Marker Info
   const handleClick = (e) => {
     console.log('clicked--', e);
-     // if(addMarker) {
-        tempMarker = true;
-        console.log("CKICI");
-        let points = [...tempPoints, {
-          'imageMarkerxPos':e.locationX,
-          'imageMarkeryPos':e.locationY,
-          'label': tempPoints.length + 1,
-          'imageMarkerDescription':''
-          }];
-
-          // console.log(points);
-          selectedIndex= points.length - 1;
-          OPTImageMarker(points);
-          // setPoints(points);
-          
-          openBottomSheetPanel(selectedIndex);
-     // }   
+    let points = [...markerPoints, {
+      'imageMarkerxPos':e.locationX,
+      'imageMarkeryPos':e.locationY,
+      'label': markerPoints.length + 1,
+      'imageMarkerDescription':''
+      }];
+    selectedIndex= points.length - 1;
+    OPTImageMarker(points);
+    openBottomSheetPanel(selectedIndex);   
   };
 
   const showMarker = () => imageProjectMarkerList && imageProjectMarkerList.length > 0 && imageProjectMarkerList.map( (point, index) => {
@@ -119,24 +89,25 @@ const textInputRef = React.createRef();
   });
 
   const openBottomSheetPanel = (index) => {
-    console.log("iiii")
+    decription = '';
     selectedIndex = index;
-    console.log("index");
-   
     markerPopupVisible(true);
-    // textInputRef.current='asd';
   }
 
   const backdropPress = () => {
-    backPress = true;
+    if(selectedIndex != null && markerPoints[selectedIndex].id) {
+      markerPopupVisible(false);
+    } else{
       deleteMarker();
+    }
+      
    }
 
   const formValueToEntity = (val) => {
     const entity = {
-      "id": tempPoints[selectedIndex]?.id ?? null,
-      "imageMarkerxPos": tempPoints[selectedIndex].imageMarkerxPos, // 394.0078125,
-      "imageMarkeryPos": tempPoints[selectedIndex].imageMarkeryPos, //281.46875,
+      "id": markerPoints[selectedIndex]?.id ?? null,
+      "imageMarkerxPos": markerPoints[selectedIndex].imageMarkerxPos, // 394.0078125,
+      "imageMarkeryPos": markerPoints[selectedIndex].imageMarkeryPos, //281.46875,
       "imageMarkerDescription": val,
       "projectImage": {
         "id": projectImage.project.id,
@@ -151,55 +122,12 @@ const textInputRef = React.createRef();
   };
 
   const addDescription = async () => {
-
-    console.log('selectedIndex',selectedIndex);
-    const val = textInputRef.current.value
-
-    console.log(formValueToEntity(val));
-    await updateImageMarker(formValueToEntity(val))
+    // console.log(formValueToEntity(decription));
+    await updateImageMarker(formValueToEntity(decription))
     markerPopupVisible(false);
-    // setModalVisible(!modalVisible);
-    // selectedIndex = null;
     setTimeout(()=>{
       getProjectImageMarkers(projectImage.project.id);
     },1000);
-    // 
-  }
-
-  const setChangeText = (val) => {
-    console.log('selectedIndex', selectedIndex);
-    console.log("tempPoints",tempPoints);
-    console.log('val', val);
-    if(selectedIndex > -1) {
-      var mutableArray = Immutable.asMutable(tempPoints, {deep: true});
-      console.log('mutableArray',mutableArray);
-      // let ind = mutableArray[selectedIndex];
-      //  ind = {
-      //    ...mutableArray[selectedIndex],
-      //    'imageMarkerDescription': 'ABC'
-      //  };
-      mutableArray[selectedIndex].imageMarkerDescription = val;
-      console.log("MUUTU", mutableArray);
-      OPTImageMarker(Immutable(mutableArray));
-    //  var da = Immutable.set(tempPoints[2],"imageMarkerDescription", 'Looks');
-    //   console.log('tempPoints,,',da);
-
-//       var obj = Immutable({type: "parrot", subtype: "Norwegian Blue", status: "alive"});
-//         var da = Immutable.merge(obj, {status: "dead"});
-
-// console.log("OBJ", da);
-
-
-
-        // console.log('mutableArray after ',mutableArray);
-      // OPTImageMarker(Immutable(mutableArray));
-    //  props.imageProjectMarkerList[selectedIndex].imageMarkerDescription = '';
-      // changeT[selectedIndex]['imageMarkerDescription'] = '';
-      // console.log('tempPoints after',tempPoints)
-      // OPTImageMarker(tempPoints);
-    }
-    // txtInpValueChange = true;
-    // onChangeText(val) 
   }
 
   const showBottomSheet = () => {
@@ -209,7 +137,7 @@ const textInputRef = React.createRef();
         animationOut="slideOutDown"
         hasBackdrop={true}
         backdropOpacity={0.3}
-        isVisible={visible}
+        isVisible={isVisible}
         onBackdropPress={() => backdropPress()}
         onSwipeComplete={() => backdropPress()}
         swipeDirection="down"
@@ -221,13 +149,11 @@ const textInputRef = React.createRef();
             {selectedIndex != null ?
             <TextInput
               style={styles.input}
-              ref={textInputRef}
-              defaultValue={tempPoints[selectedIndex]?.imageMarkerDescription}
-              // onChangeText={setChangeText}
-              //value={tempPoints[selectedIndex]?.imageMarkerDescription}
+              onChangeText={(val)=> decription = val}
+              defaultValue={markerPoints[selectedIndex]?.imageMarkerDescription}
               multiline={true}
               placeholderTextColor={'#666'}
-              placeholder="Description"
+              placeholder="Enter Description"
             /> : null}
             <RoundedButton
               text="Update"
@@ -253,57 +179,17 @@ const textInputRef = React.createRef();
   };
 
   const deleteMarker = async () => {
-    console.log("MARKEKR")
     markerPopupVisible(false);
-
-    // var obj = Immutable({all: "your base", are: {belong: "to them"}});
-    // Immutable.merge(obj, {are: {belong: "to us"}})
-    //   console.log('obj',obj);
-      var mutableArray = Immutable.asMutable(tempPoints);
-      console.log('mutableArray',mutableArray);
+    var mutableArray = Immutable.asMutable(markerPoints);
     if(selectedIndex != null && mutableArray[selectedIndex].id) {
       await props.deleteImageMarker(mutableArray[selectedIndex].id);
     }
 
-      mutableArray.splice(selectedIndex,1);
-      console.log('mutableArray after',mutableArray);
-    // Immutable.asMutable(tempPoints, {deep: true})
-    // tempPoints.splice(selectedIndex,1);
+    mutableArray.splice(selectedIndex,1);
     console.log('selectedIndex',selectedIndex);
     OPTImageMarker(Immutable(mutableArray));
-
-    // yield put(ImageMarkerActions.imageMarkerByProjectSuccess(response.data));
-    // yield put(ImageMarkerActions.imageMarkerByProjectSuccess([]));
-    // Here BackPress 
-    // Used common function for delete Marker, Only new added Marker delete from locally.
-
-    // console.log(addedPoints);
-    // console.log(selectedIndex,'selectedIndex--')
-    // console.log(backPress,'backPress--')
-
-    // const result = addedPoints.filter((_, i) => {
-    //   console.log(i+'----', i !== selectedIndex);
-    //   return i !== selectedIndex
-    // });
-    // console.log('result', result);
-    // setPoints(result);
-
-    // if(addedPoints[selectedIndex] != null && addedPoints[selectedIndex].id) {
-    //   console.log('addedPoints[selectedIndex].id', addedPoints[selectedIndex].id);
-    // let poll =  await props.deleteImageMarker(addedPoints[selectedIndex].id);
-    // console.log('poll', poll);
-    // }
-    
-    // setTimeout(()=>{
-    //   getProjectImageMarkers(projectImage.project.id);
-    // },1000);
-    
-    // backPress = false;
    
     if(selectedIndex >= 0) {
-      // let addedPoints1 = tempArr.splice(selectedIndex, 1);
-      // setAddMarker(addedPoints1);
-     // setModalVisible(false);
       selectedIndex = null;
     }
   }
@@ -341,13 +227,12 @@ const textInputRef = React.createRef();
 
 
 const mapStateToProps = (state) => {
-  console.log('state.imageMarkers.errorDeleting', state);
+  // console.log('state.imageMarkers.errorDeleting', state);
   return {
     imageProjectMarkerList: state.imageMarkers.imageProjectMarkerList,
     imageMarker: state.imageMarkers.imageMarker,
     fetching: state.imageMarkers.fetchingAll,
-    imageMarkerDeleteSuccess: state.imageMarkers.errorDeleting ? state.imageMarkers.errorDeleting : false,
-    visible: state.imageMarkers.markerInfoModalvisible
+    isVisible: state.imageMarkers.markerInfoModalvisible
   };
 };
 
@@ -356,12 +241,10 @@ const mapDispatchToProps = (dispatch) => {
     getProjectImageMarkers: (id) => dispatch(ImageMarkerActions.imageMarkerByProjectRequest(id)),
     updateImageMarker: (imageMarker) => dispatch(ImageMarkerActions.imageMarkerUpdateRequest(imageMarker)),
     deleteImageMarker: (id) => dispatch(ImageMarkerActions.imageMarkerDeleteRequest(id)),
-    OPTImageMarker: (data) => {
-      console.log(data);
-      return dispatch(ImageMarkerActions.imageMarkerOPT(data));
-    },
+    OPTImageMarker: (data) =>  dispatch(ImageMarkerActions.imageMarkerOPT(data)),
     markerPopupVisible: (data) => dispatch(ImageMarkerActions.imageMarkerInfoPopup(data)),
   };
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProjectImageMarkerScreen);
+
