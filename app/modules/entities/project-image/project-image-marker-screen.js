@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { Image, Text, View, Dimensions, TouchableOpacity, TextInput } from 'react-native';
+import { Image, Text, View, Dimensions, TouchableOpacity, TextInput, KeyboardAvoidingView } from 'react-native';
 import { connect } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import ImageMarkerActions from '../image-marker/image-marker.reducer';
@@ -144,36 +144,38 @@ function ProjectImageMarkerScreen(props) {
         style={{marginRight: 0, marginBottom: 0, marginTop: 0}}
         onRequestClose={() => backdropPress()}
       >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            {selectedIndex != null ?
-            <TextInput
-              style={styles.input}
-              onChangeText={(val)=> decription = val}
-              defaultValue={markerPoints[selectedIndex]?.imageMarkerDescription}
-              multiline={true}
-              placeholderTextColor={'#666'}
-              placeholder="Enter Description"
-            /> : null}
-            <RoundedButton
-              text="Update"
-              onPress={() => addDescription()}
-              accessibilityLabel={'Marker Update'}
-              testID="markerUpdate"
-              style={[styles.button, styles.buttonClose]}
-            />
-            <View style={styles.bottomSections}>
-              <TouchableOpacity style={styles.moveMarker}>
-                <MaterialIcons name="location-searching" size={30} color="#2196F3" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.moveMarker} onPress={()=> deleteMarker()}>
-                <MaterialIcons name="delete-outline" size={30} color="#2196F3" />
-              </TouchableOpacity>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={'padding'}>
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              {selectedIndex != null ?
+              <TextInput
+                style={styles.input}
+                onChangeText={(val)=> decription = val}
+                defaultValue={markerPoints[selectedIndex]?.imageMarkerDescription}
+                multiline={true}
+                placeholderTextColor={'#666'}
+                placeholder="Enter Description"
+              /> : null}
+              <RoundedButton
+                text="Update"
+                onPress={() => addDescription()}
+                accessibilityLabel={'Marker Update'}
+                testID="markerUpdate"
+                style={[styles.button, styles.buttonClose]}
+              />
+              <View style={styles.bottomSections}>
+                <TouchableOpacity style={styles.moveMarker}>
+                  <MaterialIcons name="location-searching" size={30} color="#2196F3" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.moveMarker} onPress={()=> deleteMarker()}>
+                  <MaterialIcons name="delete-outline" size={30} color="#2196F3" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
 
-        </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     )
   };
