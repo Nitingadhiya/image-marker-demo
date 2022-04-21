@@ -1,29 +1,191 @@
-import * as React from 'react';
-import { Provider } from 'react-redux';
-import createStore from './app/shared/reducers';
-import * as SplashScreen from 'expo-splash-screen';
+// import * as React from 'react';
+// import { Provider } from 'react-redux';
+// import createStore from './app/shared/reducers';
+// import * as SplashScreen from 'expo-splash-screen';
 
-import NavContainer from './app/navigation/nav-container';
+// import NavContainer from './app/navigation/nav-container';
 
-const store = createStore();
+// const store = createStore();
 
-export default function App() {
-  // prevent the splashscreen from disappearing until the redux store is completely ready (hidden in nav-container.js)
-  const [displayApp, setDisplayApp] = React.useState(false);
-  React.useEffect(() => {
-    if (!displayApp) {
-      SplashScreen.preventAutoHideAsync()
-        .then(() => setDisplayApp(true))
-        .catch(() => setDisplayApp(true));
+// export default function App() {
+//   // prevent the splashscreen from disappearing until the redux store is completely ready (hidden in nav-container.js)
+//   const [displayApp, setDisplayApp] = React.useState(false);
+//   React.useEffect(() => {
+//     if (!displayApp) {
+//       SplashScreen.preventAutoHideAsync()
+//         .then(() => setDisplayApp(true))
+//         .catch(() => setDisplayApp(true));
+//     }
+//   }, [displayApp, setDisplayApp]);
+
+//   return displayApp ? (
+//     <Provider store={store}>
+//       <NavContainer />
+//     </Provider>
+//   ) : null;
+// }
+
+
+// App.js 
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, Button } from 'react-native';
+
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import * as mime from 'react-native-mime-types';
+import { Buffer } from "buffer";
+
+
+
+function App() {
+  // The path of the picked image
+  const [pickedImagePath, setPickedImagePath] = useState('');
+
+  // This function is triggered when the "Select an image" button pressed
+  const showImagePicker = async () => {
+    // Ask the user for the permission to access the media library 
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("You've refused to allow this appp to access your photos!");
+      return;
     }
-  }, [displayApp, setDisplayApp]);
 
-  return displayApp ? (
-    <Provider store={store}>
-      <NavContainer />
-    </Provider>
-  ) : null;
+    const result = await ImagePicker.launchImageLibraryAsync();
+
+
+    // Explore the result
+    console.log(result);
+    uploadImageOnS3(result);
+  }
+    
+// const uploadImageOnS3 = async (result: any) => { 
+//   console.log("RESULT");
+// let base64;
+//   let options = { 'encoding': FileSystem.EncodingType.Base64 };
+//     FileSystem.readAsStringAsync(result.uri, options).then(data => {
+//       console.log("base64");
+//       base64 = 'data:image/jpg;base64' + data;
+//       const fileType = mime.lookup(result.uri);
+//       console.log(fileType);
+//       let arrayBuffer = Buffer.from(base64, "base64");
+//       // console.log(arrayBuffer);
+//       // resolve(base64); // are you sure you want to resolve the data and not the base64 string? 
+//     }).catch(err => {
+//       console.log("​getFile -> err", err);
+//       // reject(err) ;
+//     });
+//   // const base64 = await fs.readFile(result.uri, "base64" ) ;
+  
+  
+
+//     if (!result.cancelled) {
+//       setPickedImagePath(result.uri);
+//       console.log(result.uri);
+//     }
+//   }
+
+  const uploadImageOnS3 = async (result) => {
+    // s3bucket = new AWS.S3({
+    //   accessKeyId: env.awsAccessKey,
+    //   secretAccessKey:env.secretAccesskey,
+    //   Bucket: env.awsBucket,
+    //   signatureVersion:
+    //   'v4'
+    // });
+    // const base64 = await fs.readfile(result.uri,"base64");
+    // const contentType = mime.lookup(result.uri);
+    // const splitedPath = result.uri.split('/') ;
+    // const file = splitedPath[splitedPath.length - 1];
+    // const fileName = file.name || String(Date.now());
+    // const arravBuffer = Base64Binary.decode(base64);
+    // s3bucket.createBucket(() => {
+    //   const params = {
+    //     Bucket: env.awsBucket,
+    //     Key: fileName,
+    //     Body: arrayBuffer,
+    //     ContentDisposition: contentDeposition,
+    //     ContentType: contentType,
+    //   };
+    //   s3bucket.upload(params, (err, data) => {
+    //     if (err) {
+    //       reject(err);
+    //     } else {
+    //       resolve(data.Location);
+    //     }
+    //   });
+    // });
+  }
+  
+
+  // This function is triggered when the "Open camera" button pressed
+  const openCamera = async () => {
+    // Ask the user for the permission to access the camera
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("You've refused to allow this appp to access your camera!");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync();
+
+    // Explore the result
+    console.log(result);
+
+    if (!result.cancelled) {
+      setPickedImagePath(result.uri);Q
+      console.log(result.uri);
+    }
+  }
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.buttonContainer}>
+        <Button onPress={showImagePicker} title="Select an image" />
+        <Button onPress={openCamera} title="Open camera" />
+      </View>
+
+      <View style={styles.imageContainer}>
+        {
+          pickedImagePath !== '' && <Image
+            source={{ uri: pickedImagePath }}
+            style={styles.image}
+          />
+        }
+      </View>
+    </View>
+  );
 }
+
+export default App;
+
+// Kindacode.com
+// Just some styles
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonContainer: {
+    width: 400,
+    flexDirection: 'row',
+    justifyContent: 'space-around'
+  },
+  imageContainer: {
+    padding: 30
+  },
+  image: {
+    width: 400,
+    height: 300,
+    resizeMode: 'cover'
+  }
+});
+
+
+
+
 
 
 // import React from 'react';
