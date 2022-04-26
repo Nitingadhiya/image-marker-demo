@@ -56,6 +56,10 @@ export default StyleSheet.create({
     padding: 15,
     paddingHorizontal: 40,
     elevation: 2,
+    width: 200
+  },
+  buttonHorizontalSpacing: {
+    marginHorizontal: 10
   },
   buttonOpen: {
     backgroundColor: "#F194FF",
@@ -99,5 +103,21 @@ export default StyleSheet.create({
   },
   moveMarker: {
     padding: 10,
+  },
+
+  buttonFlexRow: {
+    flexDirection: 'row'
+  },
+  markerInfoImageView:{
+    marginBottom: 20
+  },
+  markerInfoImage:{
+    width: 100,
+    height: 100,
+  },
+  modalPosition: {
+    position: 'absolute',
+    zIndex: 1,
+    bottom: 0
   }
 });

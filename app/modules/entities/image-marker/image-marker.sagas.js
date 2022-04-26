@@ -54,7 +54,10 @@ function* openMarkerInfoModal(action) {
   // yield put(ImageMarkerActions.imageMarkerInfoPopup(action.visible));
 }
 
-
+//By JY
+function* openPhotoCameraModal(action) {
+  console.log("---update DATA--",action.photoCameraModalVisible);
+}
 
 //actions
 //manipulate State
@@ -105,5 +108,6 @@ export default {
   updateImageMarker,
   getProjectImageMarkers,
   updateProjectImageMarkers,
-  openMarkerInfoModal
+  openMarkerInfoModal,
+  openPhotoCameraModal
 };

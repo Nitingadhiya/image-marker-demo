@@ -34,11 +34,12 @@ function* getAllPhotos(api, action) {
 
 function* updatePhoto(api, action) {
   const { photo } = action;
+  console.log("photoooo");
   // make the call to the api
   const idIsNotNull = !(photo.id === null || photo.id === undefined);
   const apiCall = call(idIsNotNull ? api.updatePhoto : api.createPhoto, photo);
   const response = yield call(callApi, apiCall);
-
+  console.log('response', response);
   // success?
   if (response.ok) {
     response.data = mapDateFields(response.data);

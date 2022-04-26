@@ -12,11 +12,21 @@ import Modal from "react-native-modal";
 import styles from './project-image-marker-styles';
 import Immutable from 'seamless-immutable'
 
+
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import * as mime from 'react-native-mime-types';
+import { Buffer } from "buffer";
+import { RNS3 } from 'react-native-aws3';
+import PhotoActions from '../photo/photo.reducer';
+import PhotoCameraModal from '../../../shared/components/photo-camera-modal/photo-camera-modal';
+
 let imageHeight;
 let imageWidth;
 let selectedIndex;
 let markerPoints = [];
 let decription = '';
+let s3ImageObj;
 
 // @ts-ignore
 function ProjectImageMarkerScreen(props) {
@@ -27,12 +37,20 @@ function ProjectImageMarkerScreen(props) {
     imageMarker, 
     OPTImageMarker,
     markerPopupVisible, // 
-    isVisible // isVisible
+    isVisible, // isVisible for Marker Modal
+    isVisiblePhotoCameraModal, // For Camera / photo
+    photoCameraPopupVisible, // For Camera / photo
+    updatePhoto,
+    fetchMarkerList,
   } = props;
   const projectImage = props.route.params?.projectImage ?? null;
   const [scale, setScale] = useState('');
+  const [pickedImagePath, setPickedImagePath] = useState('');
+  const [loading, setLoading] = useState(false);
+
   useFocusEffect(
     React.useCallback(() => {
+      markerPopupVisible(false);
       getProjectImageSize();
       selectedIndex = null;
     },[]));
@@ -40,6 +58,7 @@ function ProjectImageMarkerScreen(props) {
     React.useEffect(() => {
       console.debug('ImageMarker entity changed and the list screen is now in focus, refresh');
       markerPoints = imageProjectMarkerList;
+      console.log(markerPoints);
       /* eslint-disable-next-line react-hooks/exhaustive-deps */
     }, [imageProjectMarkerList, imageMarker]
   );
@@ -47,6 +66,17 @@ function ProjectImageMarkerScreen(props) {
   React.useEffect(() => {
       getProjectImageMarkers(projectImage.project.id);
   }, [getProjectImageMarkers]);
+
+  React.useEffect(() => {
+    if(fetchMarkerList){
+      console.log("Verify", imageMarker);
+      console.log("Verify*", imageMarker.id);
+      createPhotoWithMarker(imageMarker.id);
+      // getProjectImageMarkers(project createPhotoWithMarker(markerId) createPhotoWithMarker(markerId));
+    }
+}, [fetchMarkerList]);
+
+
 
   // Get Actual project Image Size
   const getProjectImageSize = () => {
@@ -92,6 +122,9 @@ function ProjectImageMarkerScreen(props) {
     decription = '';
     selectedIndex = index;
     markerPopupVisible(true);
+    
+    //
+    setLoading(!loading);
   }
 
   const backdropPress = () => {
@@ -123,28 +156,130 @@ function ProjectImageMarkerScreen(props) {
 
   const addDescription = async () => {
     // console.log(formValueToEntity(decription));
-    await updateImageMarker(formValueToEntity(decription))
+    await updateImageMarker(formValueToEntity(decription));
+
     markerPopupVisible(false);
-    setTimeout(()=>{
-      getProjectImageMarkers(projectImage.project.id);
-    },1000);
+  }
+
+  const createPhotoWithMarker = (imageMarkerId) => {
+   if(s3ImageObj != null) {
+      let entity = {
+        id: null,
+        photoName: s3ImageObj.key ?? null,
+        photoUploadDate: new Date(),
+      };
+      entity.imageMarker = { 
+        "id": imageMarkerId,   
+        "imageMarkerxPos": markerPoints[selectedIndex].imageMarkerxPos, // 394.0078125,
+        "imageMarkeryPos": markerPoints[selectedIndex].imageMarkeryPos, //281.46875,
+        "imageMarkerDescription": decription, 
+    };
+      console.log("entity", entity);
+      updatePhoto(entity);
+  }
+}
+
+
+
+  const capturePhoto = () => {
+    photoCameraPopupVisible(false);
+    setTimeout(()=> openCamera(), 500);
+  }
+
+  const selectPhoto = () => {
+    photoCameraPopupVisible(false);
+    setTimeout(()=> showImagePicker(), 500);
+  }
+
+  const showImagePicker = async () => {
+    // Ask the user for the permission to access the media library 
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("You've refused to allow this appp to access your photos!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync();
+    // Explore the result
+    console.log(result);
+    uploadImageOnS3(result);
+  }
+
+  const uploadImageOnS3 = async (result) => {
+    if(result != null ) {
+      const splitedPath = result.uri.split('/') ;
+      const fileName = splitedPath[splitedPath.length - 1] || String(Date.now());
+      const contentType = mime.lookup(result.uri);
+      console.log(fileName);
+      
+      const body = {
+        // `uri` can also be a file system path (i.e. file://)
+        uri: result.uri, //"assets-library://asset/asset.PNG?id=655DBE66-8008-459C-9358-914E1FB532DD&ext=PNG",
+        name: fileName,
+        type: contentType
+      }
+      
+      const options = {
+        keyPrefix: "uploads/",
+        bucket: "siteappbucket",
+        region: "eu-central-1",
+        accessKey: "AKIA5TNCEEA6UM5U45Z6",
+        secretKey: "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",
+        successActionStatus: 201
+      }
+      
+      console.log(options);
+
+      RNS3.put(body, options).then(response => {
+        console.log(response.body);
+        if (response.status !== 201)
+          throw new Error("Failed to upload image to S3");
+        console.log("response.body", response.body);
+        console.log("response.body", response.body.postResponse.key);
+        if (!result.cancelled) {
+          console.log(result.uri);
+          s3ImageObj = response.body.postResponse;
+          setPickedImagePath(result.uri);
+        }
+            
+        //**
+        //  * {       
+        //  *   postResponse: {
+        //  *     bucket: "your-bucket",
+        //  *     etag : "9f620878e06d28774406017480a59fd4",
+        //  *     key: "uploads/image.png",
+        //  *     location: "https://your-bucket.s3.amazonaws.com/uploads%2Fimage.png"
+        //  *   }
+        //  * }
+        //  *
+      });
+    }
   }
 
   const showBottomSheet = () => {
+    console.log("isVisible", isVisible);
+    if(selectedIndex == null || !isVisible) return <View />;
     return (
-      <Modal
-        animationIn="slideInUp"
-        animationOut="slideOutDown"
-        hasBackdrop={true}
-        backdropOpacity={0.3}
-        isVisible={isVisible}
-        onBackdropPress={() => backdropPress()}
-        onSwipeComplete={() => backdropPress()}
-        swipeDirection="down"
-        style={{marginRight: 0, marginBottom: 0, marginTop: 0}}
-        onRequestClose={() => backdropPress()}
-      >
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={'padding'}>
+      // <Modal
+      //   animationIn="slideInUp"
+      //   animationOut="slideOutDown"
+      //   hasBackdrop={false}
+      //   coverScreen={false}
+      //   backdropOpacity={0}
+      //   isVisible={isVisible}
+      //   avoidKeyboard={true}
+      //   deviceHeight={100}
+      //   transparent={true}
+      //   onBackdropPress={() => backdropPress()}
+      //   propagateSwipe={true}
+      //   onSwipeComplete={() => backdropPress()}
+      //   swipeDirection={["down"]}
+      //   style={{marginRight: 0, marginBottom: 0, marginTop: 0, backgroundColor: 'red', alignSelf: 'flex-end', justifyContent: 'flex-end'}}
+      //   onRequestClose={() => backdropPress()}
+      // >
+     
+      <View style={styles.modalPosition}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
               {selectedIndex != null ?
@@ -156,13 +291,32 @@ function ProjectImageMarkerScreen(props) {
                 placeholderTextColor={'#666'}
                 placeholder="Enter Description"
               /> : null}
-              <RoundedButton
-                text="Update"
-                onPress={() => addDescription()}
-                accessibilityLabel={'Marker Update'}
-                testID="markerUpdate"
-                style={[styles.button, styles.buttonClose]}
-              />
+             
+              {pickedImagePath ?
+                <View style={styles.markerInfoImageView}>
+                  <Image source={{uri: pickedImagePath}} style={styles.markerInfoImage} />
+                </View> : 
+                <View />
+              }
+
+              <View style={styles.buttonFlexRow}>
+                <RoundedButton
+                  text="Upload Photo"
+                  onPress={() => photoCameraPopupVisible(true)}
+                  accessibilityLabel={'Marker Update'}
+                  testID="markerUpdate"
+                  style={[styles.button, styles.buttonClose, styles.buttonHorizontalSpacing]}
+                />
+                <RoundedButton
+                  text="Update"
+                  onPress={() => addDescription()}
+                  accessibilityLabel={'Marker Update'}
+                  testID="markerUpdate"
+                  style={[styles.button, styles.buttonClose, styles.buttonHorizontalSpacing]}
+                />      
+              </View>
+              
+
               <View style={styles.bottomSections}>
                 <TouchableOpacity style={styles.moveMarker}>
                   <MaterialIcons name="location-searching" size={30} color="#2196F3" />
@@ -173,10 +327,15 @@ function ProjectImageMarkerScreen(props) {
                 </TouchableOpacity>
               </View>
             </View>
-
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
+          <PhotoCameraModal 
+            isVisible={isVisiblePhotoCameraModal} 
+            cancel={()=> photoCameraPopupVisible(false)} 
+            openImagePicker={selectPhoto} 
+            openCamera={capturePhoto}
+          />
+       </View>
+      // </Modal>
     )
   };
 
@@ -223,6 +382,7 @@ function ProjectImageMarkerScreen(props) {
         </ImageZoom>
       </View>
       {showBottomSheet()}
+      
     </View>
   );
 }
@@ -234,7 +394,9 @@ const mapStateToProps = (state) => {
     imageProjectMarkerList: state.imageMarkers.imageProjectMarkerList,
     imageMarker: state.imageMarkers.imageMarker,
     fetching: state.imageMarkers.fetchingAll,
-    isVisible: state.imageMarkers.markerInfoModalvisible
+    isVisible: state.imageMarkers.markerInfoModalvisible,
+    isVisiblePhotoCameraModal: state.imageMarkers.photoCameraModalVisible,
+    fetchMarkerList: state.imageMarkers.fetchMarkerList
   };
 };
 
@@ -245,6 +407,8 @@ const mapDispatchToProps = (dispatch) => {
     deleteImageMarker: (id) => dispatch(ImageMarkerActions.imageMarkerDeleteRequest(id)),
     OPTImageMarker: (data) =>  dispatch(ImageMarkerActions.imageMarkerOPT(data)),
     markerPopupVisible: (data) => dispatch(ImageMarkerActions.imageMarkerInfoPopup(data)),
+    photoCameraPopupVisible: (data) => dispatch(ImageMarkerActions.photoCameraPopup(data)),
+    updatePhoto: (photo) => dispatch(PhotoActions.photoUpdateRequest(photo)),
   };
 };
 

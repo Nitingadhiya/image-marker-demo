@@ -87,6 +87,7 @@
     "react-datepicker": "4.3.0",
     "react-dom": "16.13.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-42.0.0.tar.gz",
+    "react-native-aws3": "^0.0.9",
     "react-native-fs": "^2.19.0",
     "react-native-gesture-handler": "~1.10.2",
     "react-native-image-pan-zoom": "^2.1.12",

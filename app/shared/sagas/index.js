@@ -87,8 +87,8 @@ export default function* root() {
 
     takeLatest(ImageMarkerTypes.IMAGE_MARKER_OPT, ImageMarkerSagas.updateProjectImageMarkers),
     takeLatest(ImageMarkerTypes.IMAGE_MARKER_INFO_POPUP, ImageMarkerSagas.openMarkerInfoModal), // By JY
+    takeLatest(ImageMarkerTypes.PHOTO_CAMERA_POPUP, ImageMarkerSagas.openPhotoCameraModal), // By JY
 
-
-
+    //PHOTO_CAMERA_POPUP photoCameraPopup
   ]);
 }
