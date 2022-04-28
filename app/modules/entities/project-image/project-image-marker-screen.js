@@ -125,6 +125,7 @@ function ProjectImageMarkerScreen(props) {
     
     //
     setLoading(!loading);
+    setPickedImagePath(null);
   }
 
   const backdropPress = () => {
@@ -159,6 +160,7 @@ function ProjectImageMarkerScreen(props) {
     await updateImageMarker(formValueToEntity(decription));
 
     markerPopupVisible(false);
+
   }
 
   const createPhotoWithMarker = (imageMarkerId) => {
