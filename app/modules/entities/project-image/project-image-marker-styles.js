@@ -2,6 +2,8 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 import { ApplicationStyles } from '../../../shared/themes';
 
+const bgColor = '#1C1C1E';
+
 export default StyleSheet.create({
   mainView: {alignItems: 'center', justifyContent: 'center', height: '100%'},
   imagePanView: { position: 'relative', alignSelf: 'center' },
@@ -119,5 +121,10 @@ export default StyleSheet.create({
     position: 'absolute',
     zIndex: 1,
     bottom: 0
+  },
+  closeIcon: {
+    backgroundColor: bgColor,
+    padding: 15,
+    borderTopLeftRadius: 10
   }
 });

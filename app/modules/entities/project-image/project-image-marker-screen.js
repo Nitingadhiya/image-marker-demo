@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { Image, Text, View, Dimensions, TouchableOpacity, TextInput, KeyboardAvoidingView } from 'react-native';
+import { Image, Text, View, Dimensions, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
 import { connect } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import ImageMarkerActions from '../image-marker/image-marker.reducer';
@@ -25,8 +25,9 @@ let imageHeight;
 let imageWidth;
 let selectedIndex;
 let markerPoints = [];
-let decription = '';
+let descriptionVal = '';
 let s3ImageObj;
+let markerValueUpdated = false; // If user change something then Value will be changed
 
 // @ts-ignore
 function ProjectImageMarkerScreen(props) {
@@ -71,12 +72,18 @@ function ProjectImageMarkerScreen(props) {
     if(fetchMarkerList){
       console.log("Verify", imageMarker);
       console.log("Verify*", imageMarker.id);
+      updateMarkerLocalArray(imageMarker);
       createPhotoWithMarker(imageMarker.id);
       // getProjectImageMarkers(project createPhotoWithMarker(markerId) createPhotoWithMarker(markerId));
     }
 }, [fetchMarkerList]);
 
 
+const updateMarkerLocalArray = (imageMarker) => {
+  var mutableArray = Immutable.asMutable(markerPoints);
+  mutableArray[mutableArray.length - 1] = imageMarker;
+  OPTImageMarker(Immutable(mutableArray));
+}
 
   // Get Actual project Image Size
   const getProjectImageSize = () => {
@@ -94,7 +101,11 @@ function ProjectImageMarkerScreen(props) {
   }
 
   //Handle Click Add / Update Marker Info
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
+    // Confirmation Popup (discard changes /stay with current marker),IF user by mistake click on another marker or background image
+   if(markerValueUpdated && ! await changeDiscard()){
+     return false;
+   }
     console.log('clicked--', e);
     let points = [...markerPoints, {
       'imageMarkerxPos':e.locationX,
@@ -112,14 +123,91 @@ function ProjectImageMarkerScreen(props) {
     const renderSelectedMarkerStyle = () => index == selectedIndex ? {borderWidth: 3, borderColor: '#2196F3'} : {};
     
     return (
-      <TouchableOpacity key={`key_${index}`} style={[styles.markerView, renderSelectedMarkerStyle(), xyPosition]} onPress={()=> openBottomSheetPanel(index)}>
+      <TouchableOpacity key={`key_${index}`} style={[styles.markerView, renderSelectedMarkerStyle(), xyPosition]} onPress={()=> selectExistingMarker(index)}>
         <Text style={{fontSize:10,color: '#fff'}} key={point.imageMarkerxPos}>{point.label ?? index + 1}</Text>
       </TouchableOpacity>
     );
   });
 
+  const selectExistingMarker = async (index) => {
+    if(index == selectedIndex) return;
+    if(await manageMarker(index)) {
+      openBottomSheetPanel(index);
+    }   
+  }
+  const manageMarker = async (index) => {
+    // Confirmation Popup (discard changes /stay with current marker),IF user by mistake click on another marker or background image
+    return new Promise(async (resolve, reject) => {
+       var mutableArray = Immutable.asMutable(markerPoints);
+    if(mutableArray[mutableArray.length - 1].id == undefined) {
+      Alert.alert(
+        "Discard",
+        "Are you sure you want to discard changes?",
+          [
+            {
+                text: "Cancel",
+                onPress: () => {
+                  console.log("Cancel Pressed");
+                   resolve(false);
+                },
+                style: "cancel"
+              },
+              {
+                text: 'OK', onPress: () => {
+                resolve(true);
+                mutableArray.splice(markerPoints.length - 1,1);
+                OPTImageMarker(Immutable(mutableArray));
+              },
+            }
+          ],
+          { cancelable: false }
+      );
+    } else {
+      // Existing Marker
+      if(markerValueUpdated && markerPoints[index]['imageMarkerDescription'] !== descriptionVal) {
+        if(await changeDiscard(index)){
+          markerValueUpdated = false;
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      } else{
+        resolve(true);
+      }
+     
+    }
+  })
+  }
+
+  const changeDiscard = ()=>{
+    // If user changes on Existing marker and then clicks on other Existing marker
+    // Confirmation Popup (discard changes /stay with current marker),IF user by mistake click on another marker or background image
+    return new Promise((resolve, reject) => {
+      Alert.alert(
+        "Discard",
+        "Are you sure you want to discard changes?",
+          [
+            {
+                text: "Cancel",
+                onPress: () => {
+                  console.log("Cancel Pressed");
+                  resolve(false);
+                },
+                style: "cancel"
+              },
+              {
+                text: 'OK', onPress: () => {
+                resolve(true);
+              },
+            }
+          ],
+          { cancelable: false }
+      );
+    });
+  }
+
   const openBottomSheetPanel = (index) => {
-    decription = '';
+    descriptionVal = '';
     selectedIndex = index;
     markerPopupVisible(true);
     
@@ -156,8 +244,8 @@ function ProjectImageMarkerScreen(props) {
   };
 
   const addDescription = async () => {
-    // console.log(formValueToEntity(decription));
-    await updateImageMarker(formValueToEntity(decription));
+    // console.log(formValueToEntity(descriptionVal));
+    await updateImageMarker(formValueToEntity(descriptionVal));
 
     markerPopupVisible(false);
 
@@ -174,13 +262,12 @@ function ProjectImageMarkerScreen(props) {
         "id": imageMarkerId,   
         "imageMarkerxPos": markerPoints[selectedIndex].imageMarkerxPos, // 394.0078125,
         "imageMarkeryPos": markerPoints[selectedIndex].imageMarkeryPos, //281.46875,
-        "imageMarkerDescription": decription, 
+        "imageMarkerDescription": descriptionVal, 
     };
       console.log("entity", entity);
       updatePhoto(entity);
   }
 }
-
 
 
   const capturePhoto = () => {
@@ -259,8 +346,15 @@ function ProjectImageMarkerScreen(props) {
     }
   }
 
+  const pressCloseIcon = async() => {
+    if(await manageMarker(selectedIndex)) {
+      selectedIndex = null;
+      markerPopupVisible(false);
+    }
+    
+  }
+
   const showBottomSheet = () => {
-    console.log("isVisible", isVisible);
     if(selectedIndex == null || !isVisible) return <View />;
     return (
       // <Modal
@@ -283,11 +377,17 @@ function ProjectImageMarkerScreen(props) {
      
       <View style={styles.modalPosition}>
           <View style={styles.centeredView}>
+            <TouchableOpacity style={styles.closeIcon} onPress={()=> pressCloseIcon()}>
+              <MaterialIcons name='close' size={30} color={'#fff'} />
+            </TouchableOpacity>
             <View style={styles.modalView}>
               {selectedIndex != null ?
               <TextInput
                 style={styles.input}
-                onChangeText={(val)=> decription = val}
+                onChangeText={(val)=> {
+                  descriptionVal = val;
+                  markerValueUpdated = true;
+                }}
                 defaultValue={markerPoints[selectedIndex]?.imageMarkerDescription}
                 multiline={true}
                 placeholderTextColor={'#666'}
