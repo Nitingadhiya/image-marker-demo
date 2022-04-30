@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { Image, Text, View, Dimensions, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
+import { Image, Text, View, Dimensions, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert, ActivityIndicator } from 'react-native';
 import { connect } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import ImageMarkerActions from '../image-marker/image-marker.reducer';
@@ -20,6 +20,8 @@ import { Buffer } from "buffer";
 import { RNS3 } from 'react-native-aws3';
 import PhotoActions from '../photo/photo.reducer';
 import PhotoCameraModal from '../../../shared/components/photo-camera-modal/photo-camera-modal';
+import AwsConfig from "../../../../aws-config.json";
+
 
 let imageHeight;
 let imageWidth;
@@ -28,6 +30,7 @@ let markerPoints = [];
 let descriptionVal = '';
 let s3ImageObj;
 let markerValueUpdated = false; // If user change something then Value will be changed
+let markerImageArray = [];
 
 // @ts-ignore
 function ProjectImageMarkerScreen(props) {
@@ -48,6 +51,7 @@ function ProjectImageMarkerScreen(props) {
   const [scale, setScale] = useState('');
   const [pickedImagePath, setPickedImagePath] = useState('');
   const [loading, setLoading] = useState(false);
+  const [multipleImageState, setMultipleImageForMarker] = useState([]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -244,6 +248,7 @@ const updateMarkerLocalArray = (imageMarker) => {
   };
 
   const addDescription = async () => {
+    markerValueUpdated = false;
     // console.log(formValueToEntity(descriptionVal));
     await updateImageMarker(formValueToEntity(descriptionVal));
 
@@ -289,7 +294,10 @@ const updateMarkerLocalArray = (imageMarker) => {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync();
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsMultipleSelection: true,
+    });
     // Explore the result
     console.log(result);
     uploadImageOnS3(result);
@@ -297,53 +305,76 @@ const updateMarkerLocalArray = (imageMarker) => {
 
   const uploadImageOnS3 = async (result) => {
     if(result != null ) {
-      const splitedPath = result.uri.split('/') ;
-      const fileName = splitedPath[splitedPath.length - 1] || String(Date.now());
-      const contentType = mime.lookup(result.uri);
-      console.log(fileName);
+     
       
-      const body = {
-        // `uri` can also be a file system path (i.e. file://)
-        uri: result.uri, //"assets-library://asset/asset.PNG?id=655DBE66-8008-459C-9358-914E1FB532DD&ext=PNG",
-        name: fileName,
-        type: contentType
+      let markerImage = {
+        id : null,
+        'url': result.uri,
+        'upload_at': true,
       }
-      
-      const options = {
-        keyPrefix: "uploads/",
-        bucket: "siteappbucket",
-        region: "eu-central-1",
-        accessKey: "AKIA5TNCEEA6UM5U45Z6",
-        secretKey: "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",
-        successActionStatus: 201
-      }
-      
-      console.log(options);
-
-      RNS3.put(body, options).then(response => {
-        console.log(response.body);
-        if (response.status !== 201)
-          throw new Error("Failed to upload image to S3");
-        console.log("response.body", response.body);
-        console.log("response.body", response.body.postResponse.key);
-        if (!result.cancelled) {
-          console.log(result.uri);
-          s3ImageObj = response.body.postResponse;
-          setPickedImagePath(result.uri);
-        }
-            
-        //**
-        //  * {       
-        //  *   postResponse: {
-        //  *     bucket: "your-bucket",
-        //  *     etag : "9f620878e06d28774406017480a59fd4",
-        //  *     key: "uploads/image.png",
-        //  *     location: "https://your-bucket.s3.amazonaws.com/uploads%2Fimage.png"
-        //  *   }
-        //  * }
-        //  *
-      });
+      console.log("markerImage",markerImage);
+      let pushIntoArray = _.concat(multipleImageState,markerImage);
+      console.log("pushIntoArray",pushIntoArray);
+      setMultipleImageForMarker(pushIntoArray);
+      imageUploadOnAWS(result, pushIntoArray);
     }
+  }
+
+
+  const imageUploadOnAWS = async(result, pushIntoArray) => {
+    
+    const splitedPath = result.uri.split('/') ;
+    const fileName = splitedPath[splitedPath.length - 1] || String(Date.now());
+    const contentType = mime.lookup(result.uri);
+    console.log(fileName);      
+  
+    const body = {
+      // `uri` can also be a file system path (i.e. file://)
+      uri: result.uri, //"assets-library://asset/asset.PNG?id=655DBE66-8008-459C-9358-914E1FB532DD&ext=PNG",
+      name: fileName,
+      type: contentType
+    }
+
+    const options = {
+      keyPrefix: "uploads/",
+      bucket: "siteappbucket",
+      region: "eu-central-1",
+      accessKey: AwsConfig.accessKey,
+      secretKey: AwsConfig.secretKey,
+      successActionStatus: 201
+    }
+    
+    await RNS3.put(body, options).then(response => {
+      console.log(response.body);
+      if (response.status !== 201)
+        throw new Error("Failed to upload image to S3");
+      console.log("response.body", response.body);
+      console.log("response.body", response.body.postResponse.key);
+      if (!result.cancelled) {
+        console.log(result.uri);
+        s3ImageObj = response.body.postResponse;
+      
+        pushIntoArray[pushIntoArray.length - 1] = {
+          'id': s3ImageObj.etag,
+          'url': s3ImageObj.location,
+          'upload_at': false
+        }
+        console.log("pushIntoArray", pushIntoArray);
+        setMultipleImageForMarker(pushIntoArray);
+        setPickedImagePath(result.uri);
+      }
+          
+      //**
+      //  * {       
+      //  *   postResponse: {
+      //  *     bucket: "your-bucket",
+      //  *     etag : "9f620878e06d28774406017480a59fd4",
+      //  *     key: "uploads/image.png",
+      //  *     location: "https://your-bucket.s3.amazonaws.com/uploads%2Fimage.png"
+      //  *   }
+      //  * }
+      //  *
+    });
   }
 
   const pressCloseIcon = async() => {
@@ -352,6 +383,20 @@ const updateMarkerLocalArray = (imageMarker) => {
       markerPopupVisible(false);
     }
     
+  }
+
+  const renderLoading = (upload_at) => {
+    console.log("renderLoading",upload_at);
+    if(upload_at == false || upload_at == 'false') {
+      console.log("SEE");
+      return <View />
+    }
+    console.log("SEE1");
+    return (
+      <View style={styles.loadingView}>
+        <ActivityIndicator size={24} color={'white'} />
+      </View>
+    )
   }
 
   const showBottomSheet = () => {
@@ -393,13 +438,27 @@ const updateMarkerLocalArray = (imageMarker) => {
                 placeholderTextColor={'#666'}
                 placeholder="Enter Description"
               /> : null}
+
+              {multipleImageState && multipleImageState.length > 0 ? 
+               <View style={styles.markerInfoImageView}>
+                {multipleImageState.map((res, index) => {
+                  return (
+                    <View key={`key_${index}`} style={styles.imageClickableView}>
+                      <Image source={{uri: res?.url}} style={styles.markerInfoImage} />
+                      {renderLoading(res?.upload_at)}
+                    </View>
+                  );
+                })}
+                </View>
+                : <View />
+              }
              
-              {pickedImagePath ?
+              {/* {pickedImagePath ?
                 <View style={styles.markerInfoImageView}>
                   <Image source={{uri: pickedImagePath}} style={styles.markerInfoImage} />
                 </View> : 
                 <View />
-              }
+              } */}
 
               <View style={styles.buttonFlexRow}>
                 <RoundedButton

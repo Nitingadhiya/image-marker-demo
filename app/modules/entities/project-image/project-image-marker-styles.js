@@ -111,7 +111,12 @@ export default StyleSheet.create({
     flexDirection: 'row'
   },
   markerInfoImageView:{
-    marginBottom: 20
+    marginBottom: 20,
+    flexDirection: 'row',
+    width: '100%',
+  },
+  imageClickableView: {
+    marginHorizontal: 5
   },
   markerInfoImage:{
     width: 100,
@@ -126,5 +131,15 @@ export default StyleSheet.create({
     backgroundColor: bgColor,
     padding: 15,
     borderTopLeftRadius: 10
+  },
+  loadingView: {
+    position: 'absolute',
+    zIndex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    alignSelf: 'center',
+    justifyContent: 'center',
+    height: 100,
+    width: 100,
   }
 });
