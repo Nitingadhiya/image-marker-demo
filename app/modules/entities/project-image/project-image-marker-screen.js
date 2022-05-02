@@ -402,101 +402,74 @@ const updateMarkerLocalArray = (imageMarker) => {
   const showBottomSheet = () => {
     if(selectedIndex == null || !isVisible) return <View />;
     return (
-      // <Modal
-      //   animationIn="slideInUp"
-      //   animationOut="slideOutDown"
-      //   hasBackdrop={false}
-      //   coverScreen={false}
-      //   backdropOpacity={0}
-      //   isVisible={isVisible}
-      //   avoidKeyboard={true}
-      //   deviceHeight={100}
-      //   transparent={true}
-      //   onBackdropPress={() => backdropPress()}
-      //   propagateSwipe={true}
-      //   onSwipeComplete={() => backdropPress()}
-      //   swipeDirection={["down"]}
-      //   style={{marginRight: 0, marginBottom: 0, marginTop: 0, backgroundColor: 'red', alignSelf: 'flex-end', justifyContent: 'flex-end'}}
-      //   onRequestClose={() => backdropPress()}
-      // >
-     
       <View style={styles.modalPosition}>
-          <View style={styles.centeredView}>
-            <TouchableOpacity style={styles.closeIcon} onPress={()=> pressCloseIcon()}>
-              <MaterialIcons name='close' size={30} color={'#fff'} />
-            </TouchableOpacity>
-            <View style={styles.modalView}>
-              {selectedIndex != null ?
-              <TextInput
-                style={styles.input}
-                onChangeText={(val)=> {
-                  descriptionVal = val;
-                  markerValueUpdated = true;
-                }}
-                defaultValue={markerPoints[selectedIndex]?.imageMarkerDescription}
-                multiline={true}
-                placeholderTextColor={'#666'}
-                placeholder="Enter Description"
-              /> : null}
+        <View style={styles.centeredView}>
+          <TouchableOpacity style={styles.closeIcon} onPress={()=> pressCloseIcon()}>
+            <MaterialIcons name='close' size={30} color={'#fff'} />
+          </TouchableOpacity>
+          <View style={styles.modalView}>
+            {selectedIndex != null ?
+            <TextInput
+              style={styles.input}
+              onChangeText={(val)=> {
+                descriptionVal = val;
+                markerValueUpdated = true;
+              }}
+              defaultValue={markerPoints[selectedIndex]?.imageMarkerDescription}
+              multiline={true}
+              placeholderTextColor={'#666'}
+              placeholder="Enter Description"
+            /> : null}
 
-              {multipleImageState && multipleImageState.length > 0 ? 
-               <View style={styles.markerInfoImageView}>
-                {multipleImageState.map((res, index) => {
-                  return (
-                    <View key={`key_${index}`} style={styles.imageClickableView}>
-                      <Image source={{uri: res?.url}} style={styles.markerInfoImage} />
-                      {renderLoading(res?.upload_at)}
-                    </View>
-                  );
-                })}
-                </View>
-                : <View />
-              }
-             
-              {/* {pickedImagePath ?
-                <View style={styles.markerInfoImageView}>
-                  <Image source={{uri: pickedImagePath}} style={styles.markerInfoImage} />
-                </View> : 
-                <View />
-              } */}
-
-              <View style={styles.buttonFlexRow}>
-                <RoundedButton
-                  text="Upload Photo"
-                  onPress={() => photoCameraPopupVisible(true)}
-                  accessibilityLabel={'Marker Update'}
-                  testID="markerUpdate"
-                  style={[styles.button, styles.buttonClose, styles.buttonHorizontalSpacing]}
-                />
-                <RoundedButton
-                  text="Update"
-                  onPress={() => addDescription()}
-                  accessibilityLabel={'Marker Update'}
-                  testID="markerUpdate"
-                  style={[styles.button, styles.buttonClose, styles.buttonHorizontalSpacing]}
-                />      
+            {multipleImageState && multipleImageState.length > 0 ? 
+              <View style={styles.markerInfoImageView}>
+              {multipleImageState.map((res, index) => {
+                return (
+                  <View key={`key_${index}`} style={styles.imageClickableView}>
+                    <Image source={{uri: res?.url}} style={styles.markerInfoImage} />
+                    {renderLoading(res?.upload_at)}
+                  </View>
+                );
+              })}
               </View>
+              : <View />
+            }
+            <View style={styles.buttonFlexRow}>
+              <RoundedButton
+                text="Upload Photo"
+                onPress={() => photoCameraPopupVisible(true)}
+                accessibilityLabel={'Marker Update'}
+                testID="markerUpdate"
+                style={[styles.button, styles.buttonClose, styles.buttonHorizontalSpacing]}
+              />
+              <RoundedButton
+                text="Update"
+                onPress={() => addDescription()}
+                accessibilityLabel={'Marker Update'}
+                testID="markerUpdate"
+                style={[styles.button, styles.buttonClose, styles.buttonHorizontalSpacing]}
+              />      
+            </View>
+            
+
+            <View style={styles.bottomSections}>
+              <TouchableOpacity style={styles.moveMarker}>
+                <MaterialIcons name="location-searching" size={30} color="#2196F3" />
+              </TouchableOpacity>
               
-
-              <View style={styles.bottomSections}>
-                <TouchableOpacity style={styles.moveMarker}>
-                  <MaterialIcons name="location-searching" size={30} color="#2196F3" />
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.moveMarker} onPress={()=> deleteMarker()}>
-                  <MaterialIcons name="delete-outline" size={30} color="#2196F3" />
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.moveMarker} onPress={()=> deleteMarker()}>
+                <MaterialIcons name="delete-outline" size={30} color="#2196F3" />
+              </TouchableOpacity>
             </View>
           </View>
-          <PhotoCameraModal 
-            isVisible={isVisiblePhotoCameraModal} 
-            cancel={()=> photoCameraPopupVisible(false)} 
-            openImagePicker={selectPhoto} 
-            openCamera={capturePhoto}
-          />
-       </View>
-      // </Modal>
+        </View>
+        <PhotoCameraModal 
+          isVisible={isVisiblePhotoCameraModal} 
+          cancel={()=> photoCameraPopupVisible(false)} 
+          openImagePicker={selectPhoto} 
+          openCamera={capturePhoto}
+        />
+      </View>
     )
   };
 
